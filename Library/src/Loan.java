@@ -1,3 +1,4 @@
+package LibraryManagementSystem;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +12,7 @@ public class Loan {
 	private double dailyPrice;
 	private double estimatedPrice;
 	private double finalPrice;
-	private Reciept reciept;
+	private Receipt reciept;
 	private Book book;
 	private Documentary documentary;
 	private Student student;
@@ -72,7 +73,7 @@ public class Loan {
 	}
 	
 	public void generateReciept() {
-		this.reciept = new Reciept(this);
+		this.reciept = new Receipt(this);
 	}
 	
 	
@@ -126,7 +127,7 @@ public class Loan {
 		this.dailyPrice = dailyPrice;
 	}
 
-	public Reciept getReciept() {
+	public Receipt getReciept() {
 		return reciept;
 	}
 
