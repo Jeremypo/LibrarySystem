@@ -1,4 +1,4 @@
-package LibraryManagementSystem;
+package hibernate;
 
 public class Author {
 	

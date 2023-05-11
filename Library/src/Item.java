@@ -1,4 +1,4 @@
-package LibraryManagementSystem;
+package hibernate;
 
 public class Item {
 	
@@ -9,6 +9,7 @@ public class Item {
 	private double dailyPrice;
 	private boolean status;
 	
+	public Item() {};
 	
 	public Item(int code, String title, String description, String location, double dailyPrice, boolean status) {
 		super();
