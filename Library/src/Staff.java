@@ -6,7 +6,7 @@ import org.hibernate.cfg.Configuration;
 
 public class Staff {
 	public static void main(String[] args) {
-		Student stu1 = new Student(Integer.parseInt("016197285"), "Jeremy Po", 33658, "jpo@cpp.edu");
+		Student stu1 = new Student(Integer.parseInt("016197285"), "Jeremy Po", "jpo@cpp.edu", "CS 3560");
 		createStudent(stu1);
 		//deleteStudent(Integer.parseInt("026197285"));
 		//deleteStudent(Integer.parseInt("016197285"));
@@ -88,7 +88,7 @@ public class Staff {
 			Student student = session.get(Student.class, broncoID);
 			
 			student.setStudentName(studentName);
-			student.setCourseID(courseID);
+			//student.setCourseID(courseID);
 			student.setStudentEmail(studentEmail);
 			
 			//session.createQuery("update Student set first_name='mary'").executeUpdate();
@@ -136,11 +136,11 @@ public class Staff {
 
 		try {
 
-			Book book = new Book( code,  title,  description,  authors,  publisher,  publishDate,  pageNumber,  location,  dailyPrice,  status);
+			//Book book = new Book( code,  title,  description,  authors,  publisher,  publishDate,  pageNumber,  location,  dailyPrice,  status);
 			
 			session.beginTransaction();
 
-			session.save(book);
+			//session.save(book);
 
 			session.getTransaction().commit();
 
