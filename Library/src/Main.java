@@ -15,13 +15,25 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Separator;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+
 import javafx.stage.Modality;
 
 
@@ -33,6 +45,7 @@ public class Main extends Application {
 	Scene AddBookScreen;
 	Scene AddDocScreen;
 	Scene loanMenu;
+	Scene reportView;
 	
 	Receipt receipt;
 	
@@ -119,8 +132,14 @@ public class Main extends Application {
 				stage.show();
 			}
 		});
-
-
+		generateReport.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent arg0) {
+				stage.setScene(reportView);	
+				stage.show();
+			}
+		});
+		
 		
 		mainMenu = new Scene(rootMain);
 		//Main menu----------------------------------------------
@@ -394,193 +413,265 @@ public class Main extends Application {
 		
 	//Loan Menu----------------------------------------------
 		// Set Title
-				stage.setTitle("Loan");
-				
-				// Create the buttons
-				
-				// Top
-				ComboBox<String> select_loan = new ComboBox<>();
-				TextField loanID = new TextField();
-				TextField itemID = new TextField();
-				TextField studentID = new TextField();
-				TextField beginDate = new TextField();
-				TextField endDate = new TextField();
-				TextField estPrice = new TextField("Estimated Price (7-day)");
-				
-				// Bottom
-				Button loanBack = new Button("Back");
-				Button calc = new Button("Calculate");
-				Button ver = new Button("Verify/Create");
-				
-				select_loan.getItems().addAll("Book", "Documentary");
-				
-				
-				loanBack.setOnAction(new EventHandler<ActionEvent>(){
-					@Override
-					public void handle(ActionEvent arg0) {
-						stage.setScene(mainMenu);
-						stage.show();
+			stage.setTitle("Loan");
+			
+			// Create the buttons
+			
+			// Top
+			ComboBox<String> select_loan = new ComboBox<>();
+			TextField loanID = new TextField();
+			TextField itemID = new TextField();
+			TextField studentID = new TextField();
+			TextField beginDate = new TextField();
+			TextField endDate = new TextField();
+			TextField estPrice = new TextField("Estimated Price (7-day)");
+			
+			// Bottom
+			Button loanBack = new Button("Back");
+			Button calc = new Button("Calculate");
+			Button ver = new Button("Verify/Create");
+			
+			select_loan.getItems().addAll("Book", "Documentary");
+			
+			
+			loanBack.setOnAction(new EventHandler<ActionEvent>(){
+				@Override
+				public void handle(ActionEvent arg0) {
+					stage.setScene(mainMenu);
+					stage.show();
+				}
+			});
+			calc.setOnAction(new EventHandler<ActionEvent>(){
+				@Override
+				public void handle(ActionEvent arg0) {
+					Double estimated = 0.00;
+					if(select_loan.getValue().equals("Book")) {
+						Book temp = new Book();
+						temp = temp.searchBook(Integer.parseInt(itemID.getText()));
+						estimated = temp.getDailyPrice() * 7;
 					}
-				});
-				calc.setOnAction(new EventHandler<ActionEvent>(){
-					@Override
-					public void handle(ActionEvent arg0) {
-						Double estimated = 0.00;
-						if(select_loan.getValue().equals("Book")) {
-							Book temp = new Book();
-							temp = temp.searchBook(Integer.parseInt(itemID.getText()));
-							estimated = temp.getDailyPrice() * 7;
-						}
-						else {
-							Documentary temp = new Documentary();
-							temp = temp.searchDocumentary(Integer.parseInt(itemID.getText()));
-							estimated = temp.getDailyPrice() * 7;
-						}
+					else {
+						Documentary temp = new Documentary();
+						temp = temp.searchDocumentary(Integer.parseInt(itemID.getText()));
+						estimated = temp.getDailyPrice() * 7;
+					}
 
-						estPrice.setText("$" + Double.toString(estimated));
-					}
-				});
-				
-				//Receipt Menu----------------------------------------------
-				Label loan_r = new Label("Loan #");
-				Label item_r = new Label("Item #");
-				Label title_r = new Label("Title: "); 
-				Label type_r = new Label("Item Type: ");
-				Label outDate_r = new Label("Check-Out Date: ");
-				Label dueDate_r = new Label("Due Date: ");
-				Label estPrice_r = new Label("Estimated Price: $");
-				
-				Label loanNum_r = new Label();
-				Label itemNum_r = new Label();
-				Label titleVal_r = new Label();
-				Label typeVal_r = new Label();
-				Label outVal_r = new Label();
-				Label dueVal_r = new Label();
-				Label estVal_r = new Label();
-				
-				VBox left_r = new VBox(20, loan_r, item_r, title_r, type_r, outDate_r, dueDate_r, estPrice_r);
-				VBox right_r = new VBox(20, loanNum_r, itemNum_r, titleVal_r, typeVal_r, outVal_r, dueVal_r, estVal_r); 
-				HBox box_r = new HBox(20, left_r, right_r);
-				
-				box_r.setAlignment(Pos.CENTER);
-				box_r.setPadding(new Insets(25));
-				
-				Stage receiptWindow = new Stage();
-				receiptWindow.initModality(Modality.APPLICATION_MODAL);
-				receiptWindow.initOwner(stage);
-				receiptWindow.setTitle("Print Receipt");
-				
-				Scene popUp = new Scene(box_r);
-				receiptWindow.setScene(popUp);
-				
-				//Scene scene = new Scene();
-				
-				//Receipt Menu----------------------------------------------
-				
-				ver.setOnAction(new EventHandler<ActionEvent>(){
-					@Override
-					public void handle(ActionEvent arg0) {
-						String loanType;
-						int loan_id;
-						int item_id;
-						int stuID_loan;
-						String begin_loan;
-						String due_loan;
-						
-						Student tempStu = new Student();
-						
-						//check which item type
-						if(select_loan.getValue() == null){ 
-							select_loan.setValue("Book");
-						}
-						
-						loanType = select_loan.getValue();
-						loan_id = Integer.parseInt(loanID.getText());
-						item_id = Integer.parseInt(itemID.getText());
-						stuID_loan = Integer.parseInt(studentID.getText());
-						begin_loan = beginDate.getText();
-						due_loan = endDate.getText();
-						
-						if(loanType.equals("Book")) {
-							Book tempBook = new Book();
-							
-							tempBook = tempBook.searchBook(item_id);
-							tempStu = tempStu.searchStudent(stuID_loan);
-							
-							BookLoan bl = new BookLoan(loan_id, begin_loan, due_loan);
-							
-							try {
-								bl.createBookLoan(tempBook, tempStu);
-							} catch (ClassNotFoundException | SQLException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
-							receipt = new Receipt(bl);
-						}
-						else {
-							Documentary tempDoc = new Documentary();
-							
-							tempDoc = tempDoc.searchDocumentary(item_id);
-							tempStu = tempStu.searchStudent(stuID_loan);
-							
-							DocLoan dl = new DocLoan(loan_id, begin_loan, due_loan);
-							
-							try {
-								dl.createDocLoan(tempDoc, tempStu);
-							} catch (ClassNotFoundException | SQLException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
-							receipt = new Receipt(dl);
-						}
-						
-						loanNum_r.setText(Integer.toString(receipt.getLoanNumber()));
-						itemNum_r.setText(Integer.toString(receipt.getItemID()));
-						titleVal_r.setText(receipt.getItemName());
-						typeVal_r.setText(select_loan.getValue());
-						outVal_r.setText(beginDate.getText());
-						dueVal_r.setText(receipt.getDueDate());
-						estVal_r.setText(Double.toString(receipt.getEstPrice()));
+					estPrice.setText("$" + Double.toString(estimated));
+				}
+			});
+			
+			//Receipt Menu----------------------------------------------
+			Label loan_r = new Label("Loan #");
+			Label item_r = new Label("Item #");
+			Label title_r = new Label("Title: "); 
+			Label type_r = new Label("Item Type: ");
+			Label outDate_r = new Label("Check-Out Date: ");
+			Label dueDate_r = new Label("Due Date: ");
+			Label estPrice_r = new Label("Estimated Price: $");
+			
+			Label loanNum_r = new Label();
+			Label itemNum_r = new Label();
+			Label titleVal_r = new Label();
+			Label typeVal_r = new Label();
+			Label outVal_r = new Label();
+			Label dueVal_r = new Label();
+			Label estVal_r = new Label();
+			
+			VBox left_r = new VBox(20, loan_r, item_r, title_r, type_r, outDate_r, dueDate_r, estPrice_r);
+			VBox right_r = new VBox(20, loanNum_r, itemNum_r, titleVal_r, typeVal_r, outVal_r, dueVal_r, estVal_r); 
+			HBox box_r = new HBox(20, left_r, right_r);
+			
+			box_r.setAlignment(Pos.CENTER);
+			box_r.setPadding(new Insets(25));
+			
+			Stage receiptWindow = new Stage();
+			receiptWindow.initModality(Modality.APPLICATION_MODAL);
+			receiptWindow.initOwner(stage);
+			receiptWindow.setTitle("Print Receipt");
+			
+			Scene popUp = new Scene(box_r);
+			receiptWindow.setScene(popUp);
+			
+			//Scene scene = new Scene();
+			
+			//Receipt Menu----------------------------------------------
+			
+			ver.setOnAction(new EventHandler<ActionEvent>(){
+				@Override
+				public void handle(ActionEvent arg0) {
+					String loanType;
+					int loan_id;
+					int item_id;
+					int stuID_loan;
+					String begin_loan;
+					String due_loan;
 					
-						receiptWindow.showAndWait();
+					Student tempStu = new Student();
+					
+					//check which item type
+					if(select_loan.getValue() == null){ 
+						select_loan.setValue("Book");
 					}
-				});			
+					
+					loanType = select_loan.getValue();
+					loan_id = Integer.parseInt(loanID.getText());
+					item_id = Integer.parseInt(itemID.getText());
+					stuID_loan = Integer.parseInt(studentID.getText());
+					begin_loan = beginDate.getText();
+					due_loan = endDate.getText();
+					
+					if(loanType.equals("Book")) {
+						Book tempBook = new Book();
+						
+						tempBook = tempBook.searchBook(item_id);
+						tempStu = tempStu.searchStudent(stuID_loan);
+						
+						BookLoan bl = new BookLoan(loan_id, begin_loan, due_loan);
+						
+						try {
+							bl.createBookLoan(tempBook, tempStu);
+						} catch (ClassNotFoundException | SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						receipt = new Receipt(bl);
+					}
+					else {
+						Documentary tempDoc = new Documentary();
+						
+						tempDoc = tempDoc.searchDocumentary(item_id);
+						tempStu = tempStu.searchStudent(stuID_loan);
+						
+						DocLoan dl = new DocLoan(loan_id, begin_loan, due_loan);
+						
+						try {
+							dl.createDocLoan(tempDoc, tempStu);
+						} catch (ClassNotFoundException | SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						receipt = new Receipt(dl);
+					}
+					
+					loanNum_r.setText(Integer.toString(receipt.getLoanNumber()));
+					itemNum_r.setText(Integer.toString(receipt.getItemID()));
+					titleVal_r.setText(receipt.getItemName());
+					typeVal_r.setText(select_loan.getValue());
+					outVal_r.setText(beginDate.getText());
+					dueVal_r.setText(receipt.getDueDate());
+					estVal_r.setText(Double.toString(receipt.getEstPrice()));
 				
-				estPrice.setEditable(false);
+					receiptWindow.showAndWait();
+				}
+			});			
+			
+			estPrice.setEditable(false);
 
-				loanID.setPromptText("Insert Loan ID");
-				itemID.setPromptText("Insert Item ID");
-				studentID.setPromptText("Insert student ID");
-				beginDate.setPromptText("Insert Begin Date (i.e. 2023-05-11)");
-				endDate.setPromptText("Insert End Date (i.e. 2023-05-11)");
+			loanID.setPromptText("Insert Loan ID");
+			itemID.setPromptText("Insert Item ID");
+			studentID.setPromptText("Insert student ID");
+			beginDate.setPromptText("Insert Begin Date (i.e. 2023-05-11)");
+			endDate.setPromptText("Insert End Date (i.e. 2023-05-11)");
 
-				loanID.setPrefSize(200.0, 30.0);
-		        itemID.setPrefSize(200.0, 30.0);
-		        studentID.setPrefSize(200.0, 30.0);
-		        beginDate.setPrefSize(200.0, 30.0);
-		        endDate.setPrefSize(200.0, 30.0);
-		        estPrice.setPrefSize(200.0, 30.0);
-		        loanBack.setPrefSize(200.0, 30.0);
-		        calc.setPrefSize(200.0, 30.0);
-		        ver.setPrefSize(200.0, 30.0);
-				
-				// Put all the buttons into a VBox
-				VBox inputs = new VBox(20, select_loan, loanID, itemID, studentID, beginDate, endDate, estPrice);
-				
-				// Put all buttons in HBox
-				HBox butt = new HBox(20, loanBack, calc, ver);
-				
-				VBox root = new VBox(20, inputs, butt);
-				root.setPadding(new Insets(25));
-				root.setAlignment(Pos.CENTER);
-				
-				loanMenu = new Scene(root, WINDOW, WINDOW);
+			loanID.setPrefSize(200.0, 30.0);
+	        itemID.setPrefSize(200.0, 30.0);
+	        studentID.setPrefSize(200.0, 30.0);
+	        beginDate.setPrefSize(200.0, 30.0);
+	        endDate.setPrefSize(200.0, 30.0);
+	        estPrice.setPrefSize(200.0, 30.0);
+	        loanBack.setPrefSize(200.0, 30.0);
+	        calc.setPrefSize(200.0, 30.0);
+	        ver.setPrefSize(200.0, 30.0);
+			
+			// Put all the buttons into a VBox
+			VBox inputs = new VBox(20, select_loan, loanID, itemID, studentID, beginDate, endDate, estPrice);
+			
+			// Put all buttons in HBox
+			HBox butt = new HBox(20, loanBack, calc, ver);
+			
+			VBox root = new VBox(20, inputs, butt);
+			root.setPadding(new Insets(25));
+			root.setAlignment(Pos.CENTER);
+			
+			loanMenu = new Scene(root, WINDOW, WINDOW);
 		//Loan Menu----------------------------------------------
 				
-		
-
+		//Generate Report View----------------------------------------
+			ArrayList<Object[]> list = getListOfLoans();
+			Label allLoans = new Label("All Loans:");
+			VBox content = new VBox();
+			Button back_gr = new Button("Back");
+			VBox gen_gr = new VBox();
+			
+			allLoans.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+			
+			content.setSpacing(10);
+			content.setPadding(new Insets(10));
+			
+			back_gr.setOnAction(new EventHandler<ActionEvent>(){
+				@Override
+				public void handle(ActionEvent arg0) {
+					stage.setScene(mainMenu);
+					stage.show();
+				}
+			});
+			setDime(back_gr);
+			
+			
+			
+			// Create multiple rows of content using HBox
+	        for (int i = 0; i < list.size(); i++) {
+	            HBox row = new HBox();
+	            HBox leftRow = new HBox();
+	            HBox rightRow = new HBox();
+	            
+	            row.setSpacing(10);
+	            Label label1 = new Label("Loan ID: ");
+	            Label labelID = new Label(Integer.toString((Integer)list.get(i)[0]));
+	            Label label3 = new Label("Due Date: ");
+	            Label labelDue = new Label((String)list.get(i)[1]);
+	            
+	            label3.setTextAlignment(TextAlignment.RIGHT);
+	            labelDue.setTextAlignment(TextAlignment.RIGHT);
+	            
+	            LocalDate due = LocalDate.parse(labelDue.getText());
+	            LocalDate current = LocalDate.now();
+	            
+	    		Separator horizontalSep = new Separator();
+	    		horizontalSep.setOrientation(Orientation.HORIZONTAL);
+	            
+	            if(current.isAfter(due)) {
+	            	label1.setStyle("-fx-text-fill: red;");
+	            	labelID.setStyle("-fx-text-fill: red;");
+	            	label3.setStyle("-fx-text-fill: red;");
+	            	labelDue.setStyle("-fx-text-fill: red;");
+	            }
+	            
+	            
+	            leftRow.setAlignment(Pos.CENTER_LEFT);
+	            rightRow.setAlignment(Pos.CENTER_RIGHT);
+	            
+	            leftRow.getChildren().addAll(label1, labelID);
+	            rightRow.getChildren().addAll(label3, labelDue);
+	            row.getChildren().addAll(leftRow, rightRow);
+	            
+	            leftRow.setPrefWidth(250);
+	            rightRow.setPrefWidth(250);
+	            row.setPrefWidth(410);
+	            
+	            content.getChildren().add(row);
+	            content.getChildren().add(horizontalSep);
+	        }
+			ScrollPane sp = new ScrollPane(content);
+			gen_gr = new VBox(20, allLoans, sp, back_gr);
+			gen_gr.setPadding(new Insets(25));
+			
+			reportView = new Scene(gen_gr);
+				
+		//Generate Report View----------------------------------------
+				
 		stage.setResizable(true);
 		stage.setTitle("CPP Library");
 		stage.setWidth(WINDOW);
@@ -588,6 +679,39 @@ public class Main extends Application {
 		stage.setScene(mainMenu);
 		stage.show();
 	}
+	
+	public static ArrayList<Object[]> getListOfLoans() {
+		ArrayList<Object[]> list_loan_id = new ArrayList<>();
+		
+		SessionFactory factory = new Configuration().
+                configure("hibernate.cfg.xml").
+                buildSessionFactory();
+
+		Session session = factory.openSession();
+		
+		try {
+			
+			@SuppressWarnings("unchecked")
+			List<Object[]> idList = session.createNativeQuery("SELECT loan_number, due_date from loan").getResultList();
+			
+			for (Object[] pair: idList) {
+				list_loan_id.add(pair);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+		} finally {
+			session.close();
+			factory.close();
+		}
+		
+		
+		System.out.println(list_loan_id);
+		return list_loan_id;
+	}
+	
+
 	
 	public static void setDime(Button button) {
 		button.setPrefSize(BUTT_WIDTH, BUTT_HEIGHT);
