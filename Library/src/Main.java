@@ -48,6 +48,7 @@ public class Main extends Application {
 	Scene reportView;
 	
 	Receipt receipt;
+	ArrayList<Object[]> list;
 	
 	public static final int WINDOW = 500;
 	public static final int BUTT_WIDTH = 200;
@@ -135,6 +136,7 @@ public class Main extends Application {
 		generateReport.setOnAction(new EventHandler<ActionEvent>(){
 			@Override
 			public void handle(ActionEvent arg0) {
+				list = getListOfLoans();
 				stage.setScene(reportView);	
 				stage.show();
 			}
@@ -599,7 +601,7 @@ public class Main extends Application {
 		//Loan Menu----------------------------------------------
 				
 		//Generate Report View----------------------------------------
-			ArrayList<Object[]> list = getListOfLoans();
+			list = getListOfLoans();
 			Label allLoans = new Label("All Loans:");
 			VBox content = new VBox();
 			Button back_gr = new Button("Back");
